@@ -9,7 +9,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -29,7 +31,19 @@ public class TweetService {
       Result - recovered Tweet
     */
     public void publishTweet(String publisher, String text) {
-        if (publisher != null && publisher.length() > 0 && text != null && text.length() > 0 && text.length() < 140) {
+
+        String tweetWithoutLink = text;
+
+        if (text.contains("http://") || text.contains("https://")) {
+            tweetWithoutLink = Arrays.stream(text.split(" "))
+                    .filter(s -> !s.contains("http"))
+                    .collect(Collectors.joining(" "));
+        }
+
+        if (publisher != null && publisher.length() > 0
+                && tweetWithoutLink != null
+                && tweetWithoutLink.length() > 0
+                && tweetWithoutLink.length() < 140) {
             Tweet tweet = new Tweet();
             tweet.setTweet(text);
             tweet.setPublisher(publisher);

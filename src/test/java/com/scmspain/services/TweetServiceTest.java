@@ -38,8 +38,8 @@ public class TweetServiceTest {
 
     @Test
     public void shouldIgnoreLinksForCharacterLimit() {
-        tweetService.publishTweet("LeChuck", "Please visit my personal web page, plenty of eighties stuff " +
-                "like Alf pictures, Madonna music and so on. #nostalgia #backtothe80s http://makelechuckgreatagain.com");
+        tweetService.publishTweet("LeChuck", "Please visit my personal web page http://makelechuckgreatagain.com, plenty of eighties stuff " +
+                "like Alf pictures, Madonna music and so on. #nostalgia #backtothe80s");
 
         verify(entityManager).persist(any(Tweet.class));
     }
