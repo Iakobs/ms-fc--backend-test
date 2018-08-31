@@ -35,4 +35,12 @@ public class TweetServiceTest {
     public void shouldThrowAnExceptionWhenTweetLengthIsInvalid() throws Exception {
         tweetService.publishTweet("Pirate", "LeChuck? He's the guy that went to the Governor's for dinner and never wanted to leave. He fell for her in a big way, but she told him to drop dead. So he did. Then things really got ugly.");
     }
+
+    @Test
+    public void shouldIgnoreLinksForCharacterLimit() {
+        tweetService.publishTweet("LeChuck", "Please visit my personal web page, plenty of eighties stuff " +
+                "like Alf pictures, Madonna music and so on. #nostalgia #backtothe80s http://makelechuckgreatagain.com");
+
+        verify(entityManager).persist(any(Tweet.class));
+    }
 }
