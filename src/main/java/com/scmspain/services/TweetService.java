@@ -32,18 +32,9 @@ public class TweetService {
     */
     public void publishTweet(String publisher, String text) {
 
-        String tweetWithoutLink = text;
+        boolean publisherIsNotNullOrEmpty = publisher != null && publisher.length() > 0;
 
-        if (text.contains("http://") || text.contains("https://")) {
-            tweetWithoutLink = Arrays.stream(text.split(" "))
-                    .filter(s -> !s.contains("http"))
-                    .collect(Collectors.joining(" "));
-        }
-
-        if (publisher != null && publisher.length() > 0
-                && tweetWithoutLink != null
-                && tweetWithoutLink.length() > 0
-                && tweetWithoutLink.length() < 140) {
+        if (publisherIsNotNullOrEmpty && tweetIsValid(text)) {
             Tweet tweet = new Tweet();
             tweet.setTweet(text);
             tweet.setPublisher(publisher);
@@ -53,6 +44,23 @@ public class TweetService {
         } else {
             throw new IllegalArgumentException("Tweet must not be greater than 140 characters");
         }
+    }
+
+    private boolean tweetIsValid(String tweet) {
+        String linkRegex = "(.*)https?://(.*)";
+        String space = " ";
+
+        String tweetWithoutLink = tweet;
+
+        if (tweet.matches(linkRegex)) {
+            tweetWithoutLink = Arrays.stream(tweet.split(space))
+                    .filter(word -> !word.matches(linkRegex))
+                    .collect(Collectors.joining(space));
+        }
+
+        boolean tweetIsNotNullOrEmpty = tweetWithoutLink != null && tweetWithoutLink.length() > 0;
+
+        return tweetIsNotNullOrEmpty && tweetWithoutLink.length() < 140;
     }
 
     /**
