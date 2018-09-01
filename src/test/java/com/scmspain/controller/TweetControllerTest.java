@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -62,10 +63,44 @@ public class TweetControllerTest {
         assertThat(new ObjectMapper().readValue(content, List.class).size()).isEqualTo(1);
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    public void shouldDiscardTweet() throws Exception {
+        mockMvc.perform(newTweet("Yo", "How are you?"))
+                .andExpect(status().is(201));
+
+        MvcResult getResult = mockMvc.perform(get("/tweet"))
+                .andExpect(status().is(200))
+                .andReturn();
+
+        String content = getResult.getResponse().getContentAsString();
+        List<Map<String, Object>> tweet = new ObjectMapper().readValue(content, List.class);
+        assertThat(tweet.size()).isEqualTo(1);
+
+        Object id = tweet.get(0).get("id");
+
+        mockMvc.perform(discardTweet(id))
+                .andExpect(status().is(201));
+
+        getResult = mockMvc.perform(get("/tweet"))
+                .andExpect(status().is(200))
+                .andReturn();
+
+        content = getResult.getResponse().getContentAsString();
+        tweet = new ObjectMapper().readValue(content, List.class);
+        assertThat(tweet.size()).isEqualTo(0);
+    }
+
     private MockHttpServletRequestBuilder newTweet(String publisher, String tweet) {
         return post("/tweet")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(format("{\"publisher\": \"%s\", \"tweet\": \"%s\"}", publisher, tweet));
+    }
+
+    private MockHttpServletRequestBuilder discardTweet(Object id) {
+        return post("/discarded")
+                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                .content(format("\"tweet\": %s", id));
     }
 
 }
