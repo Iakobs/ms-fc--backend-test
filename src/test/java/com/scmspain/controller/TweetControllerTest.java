@@ -85,6 +85,23 @@ public class TweetControllerTest {
         assertThat(tweets.size()).isEqualTo(--numberOfTweets);
     }
 
+    @Test
+    public void shouldReturnAllDiscardedTweets() throws Exception {
+        mockMvc.perform(newTweet("1", "To be discarded"));
+        mockMvc.perform(newTweet("1", "To be discarded"));
+        mockMvc.perform(newTweet("1", "To be discarded"));
+        mockMvc.perform(newTweet("1", "To be discarded"));
+
+        MvcResult getResult = mockMvc.perform(get("/discarded"))
+                .andExpect(status().is(200))
+                .andReturn();
+
+        String content = getResult.getResponse().getContentAsString();
+        List<Tweet> tweets = new ObjectMapper().readValue(content, new TypeReference<List<Tweet>>(){});
+
+        assertThat(tweets.size()).isEqualTo(4);
+    }
+
     private MockHttpServletRequestBuilder newTweet(String publisher, String tweet) {
         return post("/tweet")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
