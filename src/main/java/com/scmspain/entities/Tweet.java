@@ -16,6 +16,8 @@ public class Tweet {
     private String tweet;
     @Column (nullable=true)
     private Long pre2015MigrationStatus = 0L;
+    @Column(nullable = false)
+    private Boolean discarded = Boolean.FALSE;
 
     public Tweet() {
     }
@@ -52,4 +54,11 @@ public class Tweet {
         this.pre2015MigrationStatus = pre2015MigrationStatus;
     }
 
+    public Boolean isDiscarded() {
+        return discarded;
+    }
+
+    public void setDiscarded(Boolean discarded) {
+        this.discarded = discarded;
+    }
 }

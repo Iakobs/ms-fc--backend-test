@@ -1,5 +1,6 @@
 package com.scmspain.controller;
 
+import com.scmspain.controller.command.DiscardTweetCommand;
 import com.scmspain.controller.command.PublishTweetCommand;
 import com.scmspain.entities.Tweet;
 import com.scmspain.services.TweetService;
@@ -27,6 +28,11 @@ public class TweetController {
     @ResponseStatus(CREATED)
     public void publishTweet(@RequestBody PublishTweetCommand publishTweetCommand) {
         this.tweetService.publishTweet(publishTweetCommand.getPublisher(), publishTweetCommand.getTweet());
+    }
+
+    @PostMapping("/discarded")
+    public void discardTweet(@RequestBody DiscardTweetCommand discardTweetCommand) {
+        this.tweetService.discardTweet(discardTweetCommand.getTweet());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

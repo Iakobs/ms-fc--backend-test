@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 @Service
 @Transactional
 public class TweetService {
+    private static final String QUERY_LIST_ALL_TWEETS = "SELECT id FROM Tweet AS tweetId WHERE pre2015MigrationStatus<>99 AND discarded = FALSE ORDER BY id DESC";
+
     private EntityManager entityManager;
     private MetricWriter metricWriter;
 
@@ -46,23 +48,6 @@ public class TweetService {
         }
     }
 
-    private boolean tweetIsValid(String tweet) {
-        String linkRegex = "(.*)https?://(.*)";
-        String space = " ";
-
-        String tweetWithoutLink = tweet;
-
-        if (tweet.matches(linkRegex)) {
-            tweetWithoutLink = Arrays.stream(tweet.split(space))
-                    .filter(word -> !word.matches(linkRegex))
-                    .collect(Collectors.joining(space));
-        }
-
-        boolean tweetIsNotNullOrEmpty = tweetWithoutLink != null && tweetWithoutLink.length() > 0;
-
-        return tweetIsNotNullOrEmpty && tweetWithoutLink.length() < 140;
-    }
-
     /**
       Recover tweet from repository
       Parameter - id - id of the Tweet to retrieve
@@ -80,11 +65,45 @@ public class TweetService {
     public List<Tweet> listAllTweets() {
         List<Tweet> result = new ArrayList<Tweet>();
         this.metricWriter.increment(new Delta<Number>("times-queried-tweets", 1));
-        TypedQuery<Long> query = this.entityManager.createQuery("SELECT id FROM Tweet AS tweetId WHERE pre2015MigrationStatus<>99 ORDER BY id DESC", Long.class);
+        TypedQuery<Long> query = this.entityManager.createQuery(QUERY_LIST_ALL_TWEETS, Long.class);
         List<Long> ids = query.getResultList();
         for (Long id : ids) {
             result.add(getTweet(id));
         }
         return result;
+    }
+
+    /**
+     * Discard a tweet
+     * Parameter - id - id of the Tweet to discard
+     */
+    public void discardTweet(Long id) {
+        Tweet tweetToDiscard = getTweet(id);
+
+        if (tweetToDiscard != null) {
+            tweetToDiscard.setDiscarded(Boolean.TRUE);
+
+            this.metricWriter.increment(new Delta<Number>("discarded-tweets", 1));
+            this.entityManager.persist(tweetToDiscard);
+        } else {
+            throw new IllegalArgumentException("Tweet must not be greater than 140 characters");
+        }
+    }
+
+    private boolean tweetIsValid(String tweet) {
+        String linkRegex = "(.*)https?://(.*)";
+        String space = " ";
+
+        String tweetWithoutLink = tweet;
+
+        if (tweet.matches(linkRegex)) {
+            tweetWithoutLink = Arrays.stream(tweet.split(space))
+                    .filter(word -> !word.matches(linkRegex))
+                    .collect(Collectors.joining(space));
+        }
+
+        boolean tweetIsNotNullOrEmpty = tweetWithoutLink != null && tweetWithoutLink.length() > 0;
+
+        return tweetIsNotNullOrEmpty && tweetWithoutLink.length() < 140;
     }
 }

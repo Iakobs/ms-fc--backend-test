@@ -75,12 +75,15 @@ public class TweetControllerTest {
 
         String content = getResult.getResponse().getContentAsString();
         List<Map<String, Object>> tweet = new ObjectMapper().readValue(content, List.class);
-        assertThat(tweet.size()).isEqualTo(1);
+
+        int numberOfTweets = tweet.size();
+
+        assertThat(numberOfTweets).isGreaterThan(0);
 
         Object id = tweet.get(0).get("id");
 
         mockMvc.perform(discardTweet(id))
-                .andExpect(status().is(201));
+                .andExpect(status().is(200));
 
         getResult = mockMvc.perform(get("/tweet"))
                 .andExpect(status().is(200))
@@ -88,7 +91,7 @@ public class TweetControllerTest {
 
         content = getResult.getResponse().getContentAsString();
         tweet = new ObjectMapper().readValue(content, List.class);
-        assertThat(tweet.size()).isEqualTo(0);
+        assertThat(tweet.size()).isEqualTo(--numberOfTweets);
     }
 
     private MockHttpServletRequestBuilder newTweet(String publisher, String tweet) {
@@ -100,7 +103,7 @@ public class TweetControllerTest {
     private MockHttpServletRequestBuilder discardTweet(Object id) {
         return post("/discarded")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
-                .content(format("\"tweet\": %s", id));
+                .content(format("{\"tweet\": %s}", id));
     }
 
 }
