@@ -86,7 +86,7 @@ public class TweetService {
             this.metricWriter.increment(new Delta<Number>("discarded-tweets", 1));
             this.entityManager.persist(tweetToDiscard);
         } else {
-            throw new IllegalArgumentException("Tweet must not be greater than 140 characters");
+            throw new IllegalArgumentException("The selected tweet does not exists");
         }
     }
 

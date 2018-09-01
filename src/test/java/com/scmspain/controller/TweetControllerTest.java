@@ -1,7 +1,9 @@
 package com.scmspain.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.scmspain.configuration.TestConfiguration;
+import com.scmspain.entities.Tweet;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -15,7 +17,6 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
-import java.util.Map;
 
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,29 +70,19 @@ public class TweetControllerTest {
         mockMvc.perform(newTweet("Yo", "How are you?"))
                 .andExpect(status().is(201));
 
-        MvcResult getResult = mockMvc.perform(get("/tweet"))
-                .andExpect(status().is(200))
-                .andReturn();
+        List<Tweet> tweets = getTweets();
 
-        String content = getResult.getResponse().getContentAsString();
-        List<Map<String, Object>> tweet = new ObjectMapper().readValue(content, List.class);
-
-        int numberOfTweets = tweet.size();
+        int numberOfTweets = tweets.size();
 
         assertThat(numberOfTweets).isGreaterThan(0);
 
-        Object id = tweet.get(0).get("id");
+        Long id = tweets.get(0).getId();
 
         mockMvc.perform(discardTweet(id))
                 .andExpect(status().is(200));
 
-        getResult = mockMvc.perform(get("/tweet"))
-                .andExpect(status().is(200))
-                .andReturn();
-
-        content = getResult.getResponse().getContentAsString();
-        tweet = new ObjectMapper().readValue(content, List.class);
-        assertThat(tweet.size()).isEqualTo(--numberOfTweets);
+        tweets = getTweets();
+        assertThat(tweets.size()).isEqualTo(--numberOfTweets);
     }
 
     private MockHttpServletRequestBuilder newTweet(String publisher, String tweet) {
@@ -100,10 +91,19 @@ public class TweetControllerTest {
                 .content(format("{\"publisher\": \"%s\", \"tweet\": \"%s\"}", publisher, tweet));
     }
 
-    private MockHttpServletRequestBuilder discardTweet(Object id) {
+    private MockHttpServletRequestBuilder discardTweet(Long id) {
         return post("/discarded")
                 .contentType(MediaType.APPLICATION_JSON_UTF8)
                 .content(format("{\"tweet\": %s}", id));
+    }
+
+    private List<Tweet> getTweets() throws Exception {
+        MvcResult getResult = mockMvc.perform(get("/tweet"))
+                .andExpect(status().is(200))
+                .andReturn();
+
+        String content = getResult.getResponse().getContentAsString();
+        return new ObjectMapper().readValue(content, new TypeReference<List<Tweet>>(){});
     }
 
 }
