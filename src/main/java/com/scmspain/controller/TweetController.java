@@ -35,6 +35,11 @@ public class TweetController {
         this.tweetService.discardTweet(discardTweetCommand.getTweet());
     }
 
+    @GetMapping("/discarded")
+    public List<Tweet> listAllDiscardedTweets() {
+        return this.tweetService.listAllDiscardedTweets();
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(BAD_REQUEST)
     @ResponseBody

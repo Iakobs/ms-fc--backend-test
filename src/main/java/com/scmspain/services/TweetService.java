@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class TweetService {
     private static final String QUERY_LIST_ALL_TWEETS = "SELECT id FROM Tweet AS tweetId WHERE pre2015MigrationStatus<>99 AND discarded = FALSE ORDER BY id DESC";
+    private static final String QUERY_LIST_ALL_DISCARDED_TWEETS = "SELECT id FROM Tweet AS tweetId WHERE discarded = TRUE ORDER BY discardedDate DESC";
 
     private EntityManager entityManager;
     private MetricWriter metricWriter;
@@ -58,9 +59,8 @@ public class TweetService {
     }
 
     /**
-      Recover tweet from repository
-      Parameter - id - id of the Tweet to retrieve
-      Result - retrieved Tweet
+      Recover tweets from repository
+      Result - retrieved Tweets
     */
     public List<Tweet> listAllTweets() {
         List<Tweet> result = new ArrayList<Tweet>();
@@ -88,6 +88,21 @@ public class TweetService {
         } else {
             throw new IllegalArgumentException("The selected tweet does not exists");
         }
+    }
+
+    /**
+     Recover discarded tweets from repository
+     Result - retrieved Tweets
+     */
+    public List<Tweet> listAllDiscardedTweets() {
+        List<Tweet> result = new ArrayList<>();
+        this.metricWriter.increment(new Delta<Number>("times-queried-discarded-tweets", 1));
+        TypedQuery<Long> query = this.entityManager.createQuery(QUERY_LIST_ALL_DISCARDED_TWEETS, Long.class);
+        List<Long> ids = query.getResultList();
+        for (Long id : ids) {
+            result.add(getTweet(id));
+        }
+        return result;
     }
 
     private boolean tweetIsValid(String tweet) {

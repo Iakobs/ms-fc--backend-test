@@ -67,8 +67,7 @@ public class TweetControllerTest {
     @Test
     @SuppressWarnings("unchecked")
     public void shouldDiscardTweet() throws Exception {
-        mockMvc.perform(newTweet("Yo", "How are you?"))
-                .andExpect(status().is(201));
+        mockMvc.perform(newTweet("Yo", "How are you?"));
 
         List<Tweet> tweets = getTweets();
 
@@ -87,19 +86,26 @@ public class TweetControllerTest {
 
     @Test
     public void shouldReturnAllDiscardedTweets() throws Exception {
-        mockMvc.perform(newTweet("1", "To be discarded"));
-        mockMvc.perform(newTweet("1", "To be discarded"));
-        mockMvc.perform(newTweet("1", "To be discarded"));
-        mockMvc.perform(newTweet("1", "To be discarded"));
+        mockMvc.perform(newTweet("1", "May be discarded"));
+        mockMvc.perform(newTweet("1", "May be discarded"));
+        mockMvc.perform(newTweet("1", "May be discarded"));
+        mockMvc.perform(newTweet("1", "May be discarded"));
+
+        Long randomId = getTweets().stream()
+                .map(Tweet::getId)
+                .findAny()
+                .orElse(0L);
+
+        mockMvc.perform(discardTweet(randomId));
 
         MvcResult getResult = mockMvc.perform(get("/discarded"))
                 .andExpect(status().is(200))
                 .andReturn();
 
         String content = getResult.getResponse().getContentAsString();
-        List<Tweet> tweets = new ObjectMapper().readValue(content, new TypeReference<List<Tweet>>(){});
+        List<Tweet> discardedTweets = new ObjectMapper().readValue(content, new TypeReference<List<Tweet>>(){});
 
-        assertThat(tweets.size()).isEqualTo(4);
+        assertThat(discardedTweets.size()).isGreaterThanOrEqualTo(1);
     }
 
     private MockHttpServletRequestBuilder newTweet(String publisher, String tweet) {

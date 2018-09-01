@@ -4,6 +4,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 
 @Entity
 public class Tweet {
@@ -18,6 +20,8 @@ public class Tweet {
     private Long pre2015MigrationStatus = 0L;
     @Column(nullable = false)
     private Boolean discarded = Boolean.FALSE;
+    @Column(nullable = true)
+    private Timestamp discardedDate;
 
     public Tweet() {
     }
@@ -60,5 +64,10 @@ public class Tweet {
 
     public void setDiscarded(Boolean discarded) {
         this.discarded = discarded;
+        this.discardedDate = Timestamp.valueOf(LocalDateTime.now());
+    }
+
+    public Timestamp getDiscardedDate() {
+        return discardedDate;
     }
 }
